@@ -19,9 +19,8 @@ func encryptText(tBytes []byte, eKey []byte) string {
 	//Iterate over input file
 	var encryptedBytes []byte
 	encryptedBytes = make([]byte, len(tBytes))
-	encStr := string(eKey)
 	for i, tByte := range tBytes {
-		encryptedBytes[i] = (tByte ^ eKey[(i%len(encStr))])
+		encryptedBytes[i] = (tByte ^ eKey[(i%len(eKey))])
 	}
 
 	return hex.EncodeToString(encryptedBytes)
