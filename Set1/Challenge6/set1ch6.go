@@ -15,42 +15,42 @@ func main() {
 }
 
 func breakToBlocks(fText64 []byte, ks int) {
-	byteMap := make(map[int][]byte)
-	transposedMap := make(map[int][]byte)
 
+	//base64 text to bytes, again, TO DO: clean up so its only once
 	b64Bytes, err := base64.StdEncoding.DecodeString(string(fText64))
 	if err != nil {
 		fmt.Println(err)
+	}	
+	
+	/* 
+	 * break text into byte arrays of length keysize and transpose such
+	 * that new first block is first byte of every old block 
+	 * and new second block is second byte of every old block and so on,
+	 * for example if keysize is 3: [ABC],[ABC],[ABC],[ABC] => [AAAA],[BBBB],[CCCC] 
+	 */
+	transposedMap := make(map[int][]byte)
+	for i,j := range b64Bytes {
+		b1 := transposedMap[i%ks]
+		transposedMap[i%ks] = append(b1,j)
 	}
-
-	for i := 0; i < (len(b64Bytes) / ks); i++ {
-		b1 := make([]byte, ks)
-		for j := 0; j < ks; j++ {
-			b1[j] = b64Bytes[j+(i*ks)]
-		}
-		byteMap[i] = b1
+	
+	//Find single-byte XOR on each block and put together
+	ciphorKey := ""
+	for i := 0; i < len(transposedMap); i++ {
+		ciphorKey += decryptCiphor(transposedMap[i])
 	}
-
-	for i := 0; i < ks; i++ {
-		b1 := make([]byte, 0)
-		for _, byteArr := range byteMap {
-			b1 = append(b1, byteArr[i])
-		}
-		transposedMap[i] = b1
-	}
-	//var ciphorKey []string
-	ciphorKeyArr := make([]string, 0)
-	for _, byteArr := range transposedMap {
-		ciphorKeyArr = append(ciphorKeyArr, decryptCiphor(byteArr))
-	}
-	ciphorKey := strings.Join(ciphorKeyArr, "")
+	
+	//Print the key
 	fmt.Println("Ciphor Key: ", ciphorKey)
 
+	//Break the message with the key
 	decryptedBytes := make([]byte, len(b64Bytes))
 	ciphorBytes := []byte(ciphorKey)
 	for i, b64Byte := range b64Bytes {
 		decryptedBytes[i] = (b64Byte ^ ciphorBytes[(i%len(ciphorBytes))])
 	}
+
+	//Print decrypted message
 	fmt.Println("Message: ", string(decryptedBytes))
 }
 
