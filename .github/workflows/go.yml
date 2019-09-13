@@ -25,4 +25,6 @@ jobs:
         fi
 
     - name: Build
-      run: go build -v .
+      run: |
+        cd set1/challenge5
+        go build -v .
